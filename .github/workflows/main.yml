@@ -1,0 +1,63 @@
+name: CI/CD for HiveMap
+
+on: 
+  push:
+    branches: ["main", "develop"]
+  workflow_dispatch: 
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          passwork: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Docker Image Tag
+        id: vars
+        run: if [ "${{ github.ref_name }}" = "main" ]; then
+              echo "TAG=prod" >> $GITHUB_OUTPUT
+            else
+              echo "TAG=dev" >> $GITHUB_OUTPUT
+            fi
+
+      - name: Build and Push API (Backend)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/CommunicationControl/DevOpsProject
+          push: true
+          tags: ghcr.io/am1yak/hive-api:${{ steps.vars.outputs.TAG }}
+      - name: Build and Push API (Frontend)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/MapClient
+          push: true
+          tags: ghcr.io/am1yak/hive-web:${{ steps.vars.outputs.TAG }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine Target Server IP
+        id: server
+        run: if [ "${{ github.ref_name }}" = "main" ]; then
+                echo "IP=${{ secrets.SSH_HOST_PROD }}" >> $GITHUB_OUTPUT
+              else
+                echo "IP=${{ secrets.SSH_HOST_DEV }}" >> $GITHUB_OUTPUT
+              fi
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@1.0.3
+        with:
+          host: ${{ steps.server.outputs.IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: cd ~/hive-app
+                  docker compose pull
+                  docker compose up -d --remove-orphans
+                  docker image prune -f
