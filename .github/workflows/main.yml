@@ -44,6 +44,9 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Determine Target Server IP
         id: server
         run: if [ "${{ github.ref_name }}" = "main" ]; then
@@ -51,6 +54,17 @@ jobs:
               else
                 echo "IP=${{ secrets.SSH_HOST_DEV }}" >> $GITHUB_OUTPUT
               fi
+
+      - name: Copy docker-compose to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ steps.server.outputs.IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose.yaml" 
+          target: "~/hive-app"
+          overwrite: true
+          
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@1.0.3
         with:
