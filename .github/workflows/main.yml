@@ -66,7 +66,7 @@ jobs:
               fi
 
       - name: Copy docker-compose to Server
-        uses: appleboy/scp-action@0.1.7
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ steps.server.outputs.IP }}
           username: ${{ secrets.SSH_USER }}
@@ -76,7 +76,7 @@ jobs:
           overwrite: true
           
       - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@1.0.3
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ steps.server.outputs.IP }}
           username: ${{ secrets.SSH_USER }}
