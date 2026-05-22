@@ -31,7 +31,8 @@ jobs:
       - name: Build and Push API (Backend)
         uses: docker/build-push-action@v5
         with:
-          context: ./src/CommunicationControl/DevOpsProject
+          context: ./src/CommunicationControl
+          file: DevOpsProject/Dockerfile
           push: true
           tags: ghcr.io/am1yak/hive-api:${{ steps.vars.outputs.TAG }}
       - name: Build and Push API (Frontend)
