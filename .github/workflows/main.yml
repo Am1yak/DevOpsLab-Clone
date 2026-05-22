@@ -15,21 +15,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: am1yak
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Docker Image Tag
         id: vars
-        run: | 
-            if [ "${{ github.ref_name }}" = "main" ]; then
-              echo "TAG=prod" >> $GITHUB_OUTPUT
-            else
-              echo "TAG=dev" >> $GITHUB_OUTPUT
-            fi
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "TAG=prod" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=dev" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build and Push API (Backend)
         uses: docker/build-push-action@v5
@@ -38,6 +41,7 @@ jobs:
           file: src/CommunicationControl/DevOpsProject/Dockerfile
           push: true
           tags: ghcr.io/am1yak/hive-api:${{ steps.vars.outputs.TAG }}
+
       - name: Build and Push API (Frontend)
         uses: docker/build-push-action@v5
         with:
