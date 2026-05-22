@@ -12,7 +12,7 @@ services:
       - backend
 
   dotnet-api:
-    image: ghcr.io/am1yak/hive-api:prod
+    image: dotnet-api-image
     container_name: dotnet-api
     restart: always
     environment:
@@ -23,7 +23,7 @@ services:
       - backend
 
   react-web:
-    image: ghcr.io/am1yak/hive-web:prod
+    image: react-web-image
     container_name: react-web
     restart: always
     ports:
